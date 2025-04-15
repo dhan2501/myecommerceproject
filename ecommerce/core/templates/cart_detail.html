@@ -1,0 +1,109 @@
+{% extends 'frontbase.html' %}
+
+{% block content %}
+
+<div class="container my-4 cart-style">
+    <h1>Your Cart</h1>
+
+    {% if cart_items %}
+        <table class="table table-bordered">
+            <thead class="thead-dark">
+                <tr>
+                    <th>Product</th>
+                    <th>Qty</th>
+                    <th>Price</th>
+                    <th>Subtotal</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in cart_items %}
+                <tr>
+                <td>
+                    <a href="javascript:void(0);" 
+                       class="text-danger remove-item" 
+                       data-product-id="{{ item.product.id }}">
+                      ✖
+                    </a>
+                  </td>
+                    <td>
+                        <a href="{% url 'product_detail' item.product.id %}">
+                            {{ item.product.title }}
+                        </a>
+                    </td>
+                    <td>{{ item.quantity }}</td>
+                    <td>₹{{ item.price }}</td>
+                    <td>₹{{ item.subtotal }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <!-- Coupon form -->
+        <form method="post" action="{% url 'apply_coupon' %}" class="form-inline my-3">
+            {% csrf_token %}
+            <div class="form-group mr-2">
+                <input type="text" name="coupon_code" placeholder="Enter coupon code" class="form-control" required>
+            </div>
+            <button type="submit" class="btn btn-success">Apply Coupon</button>
+        </form>
+
+        <h4 class="text-right">Total Price: ₹{{ total_price }}</h4>
+
+        <div class="d-flex justify-content-between mt-4">
+            <a href="{% url 'product_listing' %}" class="btn btn-primary">← Continue Shopping</a>
+            <a href="{% url 'checkout' %}" class="btn btn-warning">Proceed to Checkout →</a>
+        </div>
+
+    {% else %}
+        <p>Your cart is empty.</p>
+        <a href="{% url 'product_listing' %}" class="btn btn-primary mt-3">Start Shopping</a>
+    {% endif %}
+</div>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    $(document).on('click', '.remove-item', function() {
+        var productId = $(this).data('product-id');
+        var row = $(this).closest('tr');
+    
+        Swal.fire({
+            title: 'Remove this product?',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Yes, remove it!',
+            cancelButtonText: 'Cancel'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                $.ajax({
+                    url: '/cart/remove/' + productId + '/',
+                    method: 'GET',
+                    success: function(response) {
+                        if (response.success) {
+                            row.remove();
+                            $('#cart-count').text(response.cart_count);
+    
+                            // Optionally show a success toast
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Removed!',
+                                toast: true,
+                                timer: 1500,
+                                position: 'top-end',
+                                showConfirmButton: false
+                            });
+    
+                            // If cart is empty, show empty message
+                            if ($('tbody tr').length == 0) {
+                                $('.table').remove();
+                                $('.form-inline').remove();
+                                $('h4, .d-flex').remove();
+                                $('.cart-style').append('<p>Your cart is empty.</p><a href="{% url "product_listing" %}" class="btn btn-primary mt-3">Start Shopping</a>');
+                            }
+                        }
+                    }
+                });
+            }
+        });
+    });
+    </script>
+{% endblock %}

@@ -1,0 +1,31 @@
+{% extends 'frontbase.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <!-- Product Image -->
+        <div class="col-md-5">
+            <img src="{{ product.image.url }}" class="img-fluid rounded shadow" alt="{{ product.name }}">
+        </div>
+
+        <!-- Product Info -->
+        <div class="col-md-7">
+            <h2>{{ product.title }}</h2>
+            <p><strong>Category:</strong> {{ product.category }}</p>
+            <p><strong>Description:</strong> {{ product.description }}</p>
+            <p class="h4 text-success">Price: ₹{{ product.sale_price|default:product.regular_price }}</p>
+            
+            <!-- Add to Cart Form -->
+            <form method="post" action="{% url 'add_to_cart' product.id %}" class="mt-3">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label for="quantity">Quantity:</label>
+                    <input type="number" name="quantity" id="quantity" value="1" min="1" class="form-control w-25" required>
+                </div>
+                <button type="submit" class="btn btn-primary mt-2">Add to Cart</button>
+                <a href="{% url 'product_listing' %}" class="btn btn-secondary mt-2">Back to Products</a>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

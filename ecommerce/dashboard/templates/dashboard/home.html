@@ -1,0 +1,7 @@
+{% extends 'dashboard/base.html' %}
+
+{% block content %}
+<h1>Welcome to your Custom Dashboard, {{ request.user.username }}!</h1>
+<p>Your email is: {{ request.user.email }}</p>
+<p>This is your main admin area — not using Django's default admin panel!</p>
+{% endblock %}

@@ -1,0 +1,81 @@
+{% extends 'dashboard/base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>User List</h2>
+
+   <!-- Superadmins Table -->
+    <h3 class="mt-5">Superadmins</h3>
+    <table class="table table-bordered table-striped">
+        <thead class="table-dark">
+            <tr>
+                <th>Username</th>
+                <th>Email</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for user in superadmins %}
+            <tr>
+                <td>{{ user.username }}</td>
+                <td>{{ user.email }}</td>
+                <td>
+                    <a href="{% url 'dashboard:change_password' user.id %}" class="btn btn-primary btn-sm">Change Password</a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="4">No superadmins found.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <!-- Customers Table -->
+    <h3 class="mt-5">Customers</h3>
+    <table class="table table-bordered table-striped">
+        <thead class="table-dark">
+            <tr>
+                <th>Username</th>
+                <th>Email</th>
+                <th>Phone</th>
+                <th>Address</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for customer in customers %}
+            <tr>
+                <td>{{ customer.user.username }}</td>
+                <td>{{ customer.user.email }}</td>
+                <td>{{ customer.phone }}</td>
+                <td>{{ customer.address }}</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="5">No customers found.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <!-- Subscribers Table -->
+    <h3 class="mt-5">Subscribers</h3>
+    <table class="table table-bordered table-striped">
+        <thead class="table-dark">
+            <tr>
+                <th>Username</th>
+                <th>Email</th>
+                <th>Subscribed On</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for subscriber in subscribers %}
+            <tr>
+                <td>{{ subscriber.user.username }}</td>
+                <td>{{ subscriber.user.email }}</td>
+                <td>{{ subscriber.subscribed_on }}</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="4">No subscribers found.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+</div>
+{% endblock %}

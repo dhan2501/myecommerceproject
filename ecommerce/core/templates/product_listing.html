@@ -1,0 +1,63 @@
+{% extends 'frontbase.html' %}
+
+{% block title %}Products{% endblock %}
+
+{% block content %}
+
+<div class="container mt-4">
+    <div class="row">
+        <!-- Category Sidebar -->
+        <div class="col-md-3">
+            <div class="list-group">
+                <div class="list-group mb-4">
+                    <h5 class="mb-2">Categories</h5>
+                  
+                    <a href="{% url 'product_listing' %}" class="list-group-item list-group-item-action {% if not request.GET.category %}active{% endif %}">
+                      All Categories
+                    </a>
+                  
+                    {% for category in categories %}
+                      <a href="?category={{ category.id }}" class="list-group-item list-group-item-action {% if request.GET.category == category.id|stringformat:'s' %}active{% endif %}">
+                        {{ category.name }}
+                      </a>
+                    {% empty %}
+                      <div class="list-group-item">No categories found</div>
+                    {% endfor %}
+                  </div>
+                  
+            </div>
+        </div>
+
+        <!-- Product Listing -->
+        <div class="col-md-9">
+            <div class="row">
+                {% for product in products %}
+                <div class="col-md-4 mb-4">
+                    <div class="card">
+                        <img src="{{ product.image.url }}" class="card-img-top" alt="{{ product.title }}">
+                        <div class="card-body">
+                            <h5 class="card-title">{{ product.title }}</h5>
+                            <p class="card-text">{{ product.description|truncatewords:20 }}</p>
+                            <p class="card-text"><strong>${{ product.regular_price }}</strong></p>
+                            {% if product.sale_price %}
+                                <p class="card-text"><small class="text-muted">Sale: ${{ product.sale_price }}</small></p>
+                                <p class="card-text"><strong>Discount: {{ product.discount_percentage }}%</strong></p>
+                            {% endif %}
+                            <a href="{% url 'product_detail' product.id %}" class="btn btn-primary">View Details</a>
+                            <form method="post" action="{% url 'add_to_cart' product.id %}" class="d-inline">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-success btn-sm">Add to Cart</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                
+                {% empty %}
+                    <p>No products available.</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
