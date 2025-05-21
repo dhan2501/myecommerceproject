@@ -1,0 +1,37 @@
+{% extends 'myaccount/base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+  <h2>Your Saved Addresses</h2>
+
+  {% if addresses %}
+    <ul class="list-group">
+      {% for address in addresses %}
+        <li class="list-group-item">
+          <strong>{{ address.address_line1 }}</strong><br>
+          {% if address.address_line2 %}
+            {{ address.address_line2 }}<br>
+          {% endif %}
+          {{ address.city }}, {{ address.state }}<br>
+          {{ address.postal_code }}<br>
+          {{ address.country }}<br>
+          
+          {% with related_orders=orders|dictsort:"created_at" %}
+            <small>
+              {% for order in related_orders %}
+                {% if order.shipping_address.id == address.id %}
+                  <a href="{% url 'order_detail' order.id %}">Order #{{ order.id }}</a> on {{ order.created_at|date:"d M Y" }}<br>
+                {% endif %}
+              {% endfor %}
+            </small>
+          {% endwith %}
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p>You haven't added any addresses yet.</p>
+  {% endif %}
+
+  <a class="btn btn-primary mt-3" href="#">Add New Address</a>
+</div>
+{% endblock %}

@@ -1,9 +1,34 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.http import HttpResponse
-from dashboard.models import ProductCategory, Product, Coupon, Order, OrderItem
+from dashboard.models import ProductCategory, Product, Coupon, Order, OrderItem, HomeSlider, HomeFeature, ProductReview, Blog
 from django.contrib import messages
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
+from django.contrib.auth import login
+
+
+# django.contrib.auth import login, authenticate, logout
+from django.contrib.auth.decorators import login_required
+from .forms import CustomUserCreationForm, CustomAuthenticationForm, ShippingAddressForm, PaymentCardForm
+from .models import ShippingAddress, PaymentCard
+from dashboard.models import Order # assuming this is where orders live
+from django.contrib.auth.models import User
+from django.contrib import messages
+from .forms import ProductReviewForm
+
+def home_page(request):
+    sliders = HomeSlider.objects.filter(is_active=True)
+    products = Product.objects.filter(is_active=True).order_by('-created_at')  # or any filter
+    features = HomeFeature.objects.all()
+    customer_reviews = ProductReview.objects.all().order_by('-created_at')[:10]
+    categories = ProductCategory.objects.filter(is_active=True)
+    params= {'products': products, 
+             'sliders': sliders, 
+             'features': features, 
+             'customer_reviews' : customer_reviews,
+             'categories' : categories
+            }
+    return render(request, 'home.html', params)
 
 
 def product_listing(request):
@@ -52,18 +77,24 @@ def cart_detail(request):
     total_price = 0
 
     for product_id_str, item in cart.items():
-        product = get_object_or_404(Product, id=int(product_id_str))
-        quantity = item['quantity']
-        price = item['price']
-        subtotal = quantity * price
-        total_price += subtotal
+        try:
+            product = Product.objects.get(id=int(product_id_str))
+            quantity = item.get('quantity', 1)
+            price = product.sale_price or product.regular_price
+            total = quantity * price
+            total_price += total
 
-        cart_items.append({
-            'product': product,
-            'quantity': quantity,
-            'price': price,
-            'subtotal': subtotal
-        })
+            cart_items.append({
+                'product': product,
+                'quantity': quantity,
+                'price': price,
+                'total': total,
+                'subtotal': total,
+                'image': product.image.url if product.image else ''
+            })
+
+        except Product.DoesNotExist:
+            continue
 
     return render(request, 'cart_detail.html', {
         'cart_items': cart_items,
@@ -71,19 +102,32 @@ def cart_detail(request):
     })
 
 
-# Product detail page
-def product_detail(request, id):
-    product = get_object_or_404(Product, id=id)
+def product_detail(request, slug):
+    product = get_object_or_404(Product, slug=slug)
+    reviews = product.reviews.order_by('-created_at')  # Assumes related_name='reviews' in ProductReview
 
+    # Review form logic
+    if request.method == 'POST':
+        form = ProductReviewForm(request.POST)
+        if form.is_valid():
+            review = form.save(commit=False)
+            review.product = product
+            review.save()
+            return redirect('product_detail', slug=product.slug)
+    else:
+        form = ProductReviewForm()
+
+    # Cart count logic
     cart = request.session.get('cart', {})
     cart_count = sum(item['quantity'] if isinstance(item, dict) else item for item in cart.values())
 
     context = {
         'product': product,
-        'cart_count': cart_count
+        'cart_count': cart_count,
+        'reviews': reviews,
+        'form': form
     }
     return render(request, 'product_detail.html', context)
-
 
 # Apply coupon view
 def apply_coupon(request):
@@ -119,7 +163,8 @@ def checkout(request):
             'product': product,
             'quantity': quantity,
             'price': price,
-            'subtotal': subtotal
+            'subtotal': subtotal,
+            'total': subtotal
         })
 
     # Apply coupon if exists
@@ -149,6 +194,7 @@ def place_order(request):
 
         # Save Order
         order = Order.objects.create(
+            customer=request.user,  # <-- This is necessary
             full_name=full_name,
             email=email,
             phone=phone,
@@ -197,3 +243,101 @@ def remove_from_cart(request, product_id):
     cart_count = sum(item['quantity'] for item in cart.values())
 
     return JsonResponse({'success': True, 'cart_count': cart_count})
+
+
+
+
+# Register View
+def register_view(request):
+    if request.method == "POST":
+        form = CustomUserCreationForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Registration successful.")
+            return redirect('login')  # Redirect to login page
+    else:
+        form = CustomUserCreationForm()
+    return render(request, 'myaccount/register.html', {'form': form})
+
+# Login View
+def login_view(request):
+    if request.method == "POST":
+        form = CustomAuthenticationForm(data=request.POST)
+        if form.is_valid():
+            user = form.get_user()
+            login(request, user)
+            return redirect('product_listing')  # Redirect to home page after login
+    else:
+        form = CustomAuthenticationForm()
+    return render(request, 'myaccount/login.html', {'form': form})
+
+# Logout View (Django provides logout functionality out of the box)
+from django.contrib.auth import logout
+
+def logout_view(request):
+    logout(request)
+    return redirect('login')
+
+def order_detail(request, order_id):
+    order = get_object_or_404(Order, id=order_id, customer=request.user)
+    return render(request, 'myaccount/order_detail.html', {'order': order})
+
+
+@login_required
+def order_history_view(request):
+    # orders = Order.objects.filter(user=request.user)
+    orders = Order.objects.filter(email=request.user.email).order_by('-created_at')
+    return render(request, 'myaccount/order_history.html', {'orders': orders})
+
+@login_required
+def addresses_view(request):
+    addresses = ShippingAddress.objects.filter(user=request.user)
+    if request.method == 'POST':
+        form = ShippingAddressForm(request.POST)
+        if form.is_valid():
+            address = form.save(commit=False)
+            address.user = request.user
+            address.save()
+            return redirect('addresses')
+    else:
+        form = ShippingAddressForm()
+    return render(request, 'myaccount/addresses.html', {'form': form, 'addresses': addresses})
+
+@login_required
+def payment_cards_view(request):
+    cards = PaymentCard.objects.filter(user=request.user)
+    if request.method == 'POST':
+        form = PaymentCardForm(request.POST)
+        if form.is_valid():
+            card = form.save(commit=False)
+            card.user = request.user
+            card.save()
+            return redirect('payment_cards')
+    else:
+        form = PaymentCardForm()
+    return render(request, 'myaccount/payment_cards.html', {'form': form, 'cards': cards})
+
+def logout_view(request):
+    logout(request)
+    return redirect('login')
+
+
+# Home page view
+def home_view(request):
+    return render(request, 'myaccount/home.html')
+
+def category_detail(request, pk):
+    category = get_object_or_404(ProductCategory, is_active=True, pk=pk)
+    products = Product.objects.filter(category=category)
+    return render(request, 'category_detail.html', {
+        'category': category,
+        'products': products
+    })
+
+def blog_list(request):
+    blogs = Blog.objects.filter(status='published').order_by('-created_at')
+    return render(request, 'blog_list.html', {'blogs': blogs})
+
+def blog_detail(request, slug):
+    blog = get_object_or_404(Blog, slug=slug, status='published')
+    return render(request, 'blog/blog_detail.html', {'blog': blog})

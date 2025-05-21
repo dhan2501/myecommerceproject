@@ -1,0 +1,42 @@
+{% extends 'myaccount/base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+  <h2>Order History</h2>
+
+  {% if orders %}
+    <table class="table table-striped">
+      <thead>
+        <tr>
+          <th>Order ID</th>
+          <th>Date</th>
+          <th>Products</th>
+          <th>Total Price</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for order in orders %}
+        <tr>
+          <td>
+            <a href="{% url 'order_detail' order.id %}">#{{ order.id }}</a>
+          </td>
+          <td>{{ order.created_at|date:"d M Y H:i" }}</td>
+          <td>
+            <ul class="mb-0">
+              {% for item in order.items.all %}
+                <li>
+                  <a href="{% url 'order_detail' order.id %}">{{ item.product_name }}</a>
+                </li>
+              {% endfor %}
+            </ul>
+          </td>
+          <td>£{{ order.total_price }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <p>No orders found.</p>
+  {% endif %}
+</div>
+{% endblock %}

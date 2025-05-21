@@ -1,4 +1,5 @@
-{% extends 'frontbase.html' %}
+{% extends 'base.html' %}
+{% load static %}
 
 {% block content %}
 <div class="container mt-4">
@@ -27,5 +28,28 @@
             </form>
         </div>
     </div>
+    <h3>Customer Reviews</h3>
+{% for review in reviews %}
+  <div class="mb-3 border p-3 rounded">
+    <p>“{{ review.review }}”</p>
+    <div class="text-warning">
+      {% for i in "12345"|slice:":review.rating" %}
+        <i class="fas fa-star"></i>
+      {% endfor %}
+    </div>
+    <strong>{{ review.name }}</strong>
+  </div>
+{% empty %}
+  <p>No reviews yet.</p>
+{% endfor %}
+
+<hr>
+
+<h4>Leave a Review</h4>
+<form method="post">
+  {% csrf_token %}
+  {{ form.as_p }}
+  <button type="submit" class="btn btn-primary">Submit Review</button>
+</form>
 </div>
 {% endblock %}

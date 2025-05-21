@@ -24,6 +24,7 @@ urlpatterns = [
     path('', include('core.urls')),  # Include your app URLs
     # path('dashboard/', include('dashboard.urls')),
     path('dashboard/', include('dashboard.urls', namespace='dashboard')),
+    # path('account/', include('myaccount.urls')),
 
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 

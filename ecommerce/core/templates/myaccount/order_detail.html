@@ -1,0 +1,31 @@
+{% extends 'myaccount/base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+  <h2>Order #{{ order.id }} Details</h2>
+  <p><strong>Date:</strong> {{ order.created_at|date:"d M Y H:i" }}</p>
+  <p><strong>Total Price:</strong> £{{ order.total_price }}</p>
+
+  <h4>Products:</h4>
+  <table class="table table-bordered">
+    <thead>
+      <tr>
+        <th>Product</th>
+        <th>Quantity</th>
+        <th>Price</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for item in order.items.all %}
+      <tr>
+        <td>{{ item.product_name }}</td>
+        <td>{{ item.quantity }}</td>
+        <td>£{{ item.price }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <a href="{% url 'orders' %}" class="btn btn-secondary mt-3">Back to Order History</a>
+</div>
+{% endblock %}

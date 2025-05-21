@@ -1,6 +1,6 @@
 # admin.py
 from django.contrib import admin
-from .models import ProductCategory, Product, ProductTag, Order, OrderItem, Coupon
+from .models import ProductCategory, Product, ProductTag, Order, OrderItem, Coupon, HomeSlider, HomeFeature, Blog
 
 from django.utils.html import format_html
 
@@ -66,3 +66,23 @@ class CouponAdmin(admin.ModelAdmin):
     list_display = ('code', 'discount_amount', 'is_active')
     list_filter = ('is_active',)
     search_fields = ('code',)
+
+
+@admin.register(HomeSlider)
+class HomeSliderAdmin(admin.ModelAdmin):
+    list_display = ('title', 'is_active', 'created_at')
+    list_filter = ('is_active',)
+    search_fields = ('title', 'author_name')
+
+
+@admin.register(HomeFeature)
+class HomeFeatureAdmin(admin.ModelAdmin):
+    list_display = ('title', 'description')
+
+
+@admin.register(Blog)
+class BlogAdmin(admin.ModelAdmin):
+    list_display = ('title', 'author', 'status', 'created_at')
+    prepopulated_fields = {'slug': ('title',)}
+    list_filter = ('status', 'created_at', 'author')
+    search_fields = ('title', 'content')

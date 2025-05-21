@@ -1,0 +1,22 @@
+{% extends 'myaccount/base.html' %}
+
+{% block content %}
+<h2>Your Payment Cards</h2>
+
+<ul>
+  {% for card in cards %}
+    <li>{{ card.cardholder_name }} — **** **** **** {{ card.card_number|slice:"-4:" }}</li>
+  {% empty %}
+    <li>No cards added yet.</li>
+  {% endfor %}
+</ul>
+
+<h3>Add a New Payment Card</h3>
+<form method="post">
+  {% csrf_token %}
+  {{ form.as_p }}
+  <button type="submit">Add Card</button>
+</form>
+
+<a href="{% url 'logout' %}">Logout</a>
+{% endblock %}

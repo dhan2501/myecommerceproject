@@ -1,0 +1,41 @@
+{% extends 'myaccount/base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+  <div class="row">
+    
+    {% if user.is_authenticated %}
+    <!-- Sidebar -->
+    <div class="col-md-3">
+      <div class="list-group">
+        <a href="{% url 'home_view' %}" class="list-group-item list-group-item-action active">Dashboard</a>
+        <a href="{% url 'orders' %}" class="list-group-item list-group-item-action">Order History</a>
+        <a href="{% url 'addresses' %}" class="list-group-item list-group-item-action">Shipping Addresses</a>
+        <a href="#" class="list-group-item list-group-item-action">Payment Cards</a>
+        
+        <form method="POST" action="{% url 'logout' %}" class="mt-2">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-danger btn-block w-100">Logout</button>
+        </form>
+      </div>
+    </div>
+    <!-- /Sidebar -->
+
+    <!-- Main Content -->
+    <div class="col-md-9">
+      <h2>Welcome to the Dashboard, {{ user.username }}!</h2>
+      <p>This is your account overview page.</p>
+    </div>
+
+    {% else %}
+    <!-- If not logged in -->
+    <div class="col-12">
+      <h2>Welcome to the Home Page!</h2>
+      <p><a href="{% url 'login' %}" class="btn btn-primary">Login</a>
+         <a href="{% url 'register' %}" class="btn btn-secondary">Register</a></p>
+    </div>
+    {% endif %}
+
+  </div>
+</div>
+{% endblock %}
