@@ -1,8 +1,27 @@
 # admin.py
 from django.contrib import admin
-from .models import ProductCategory, Product, ProductTag, Order, OrderItem, Coupon, HomeSlider, HomeFeature, Blog
+from .models import ProductCategory, Product, ProductTag, Order, OrderItem, Coupon, HomeSlider, HomeFeature, Blog, CustomerReview, ContactEmail, ContactPhone, FooterContact, Wishlist
 
 from django.utils.html import format_html
+
+@admin.register(Wishlist)
+class WishlistAdmin(admin.ModelAdmin):
+    list_display = ('user', 'product', 'added_at')
+    search_fields = ('user__username', 'product__name')
+    list_filter = ('added_at',) 
+
+class ContactEmailInline(admin.TabularInline):
+    model = ContactEmail
+    extra = 1
+
+class ContactPhoneInline(admin.TabularInline):
+    model = ContactPhone
+    extra = 1
+
+class FooterContactAdmin(admin.ModelAdmin):
+    inlines = [ContactEmailInline, ContactPhoneInline]
+
+admin.site.register(FooterContact, FooterContactAdmin)
 
 @admin.register(ProductCategory)
 class ProductCategoryAdmin(admin.ModelAdmin):
@@ -86,3 +105,9 @@ class BlogAdmin(admin.ModelAdmin):
     prepopulated_fields = {'slug': ('title',)}
     list_filter = ('status', 'created_at', 'author')
     search_fields = ('title', 'content')
+
+
+@admin.register(CustomerReview)
+class CustomerReviewAdmin(admin.ModelAdmin):
+    list_display = ['name', 'rating', 'created_at']
+    ordering = ['-created_at']

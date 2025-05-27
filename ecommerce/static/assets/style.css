@@ -1351,3 +1351,11 @@ select#input-sort {
     margin-bottom: 10px;
   }
 }
+
+.cart-btn.active {
+  background-color: green !important;
+}
+
+.cart-btn svg use {
+  transition: all 0.3s ease;
+}

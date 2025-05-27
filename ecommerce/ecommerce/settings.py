@@ -67,8 +67,8 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
                 'core.context_processors.cart_counter',  # 👈 add this line
-                 # your custom context processor
                 'core.context_processors.cart_context',
+                'core.context_processors.wishlist_context'
             ],
         },
     },
@@ -88,23 +88,23 @@ WSGI_APPLICATION = 'ecommerce.wsgi.application'
 # }
 
 
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.mysql',
-#         'NAME': 'myecoomerce',
-#         'USER': 'root',
-#         'PASSWORD': '',
-#         'HOST': 'localhost',   # Or an IP Address that your DB is hosted on
-#         'PORT': '3306',
-#     }
-# }
-
-
 DATABASES = {
-    'default': dj_database_url.config(
-        default=os.getenv('DATABASE_URL', 'postgresql://dhanecommerce:DrUoxyMrx3ErrAG4m1KlLnXXHszsOIT6@dpg-d0i1ff24d50c73b0gsag-a.oregon-postgres.render.com/selfecommerce')
-    )
+    'default': {
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'newmyecommerce',
+        'USER': 'root',
+        'PASSWORD': '',
+        'HOST': 'localhost',   # Or an IP Address that your DB is hosted on
+        'PORT': '3306',
+    }
 }
+
+
+# DATABASES = {
+#     'default': dj_database_url.config(
+#         default=os.getenv('DATABASE_URL', 'postgresql://dhanecommerce:DrUoxyMrx3ErrAG4m1KlLnXXHszsOIT6@dpg-d0i1ff24d50c73b0gsag-a.oregon-postgres.render.com/selfecommerce')
+#     )
+# }
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators

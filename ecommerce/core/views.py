@@ -1,6 +1,6 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.http import HttpResponse
-from dashboard.models import ProductCategory, Product, Coupon, Order, OrderItem, HomeSlider, HomeFeature, ProductReview, Blog
+from dashboard.models import ProductCategory, Product, Coupon, Order, OrderItem, HomeSlider, HomeFeature, ProductReview, Blog, Wishlist, Cart
 from django.contrib import messages
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
@@ -11,25 +11,37 @@ from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
 from .forms import CustomUserCreationForm, CustomAuthenticationForm, ShippingAddressForm, PaymentCardForm
 from .models import ShippingAddress, PaymentCard
-from dashboard.models import Order # assuming this is where orders live
+from dashboard.models import Order, CustomerReview # assuming this is where orders live
 from django.contrib.auth.models import User
 from django.contrib import messages
 from .forms import ProductReviewForm
+from django.contrib.auth import logout
 
 def home_page(request):
     sliders = HomeSlider.objects.filter(is_active=True)
     products = Product.objects.filter(is_active=True).order_by('-created_at')  # or any filter
     features = HomeFeature.objects.all()
-    customer_reviews = ProductReview.objects.all().order_by('-created_at')[:10]
+    customer_reviews = CustomerReview.objects.all().order_by('-created_at')[:10]
     categories = ProductCategory.objects.filter(is_active=True)
+    blogs = Blog.objects.filter(status='published').order_by('-created_at')
+    
+    # Get product IDs in wishlist for the logged-in user
+    wishlist_product_ids = []
+    if request.user.is_authenticated:
+        wishlist_product_ids = Wishlist.objects.filter(user=request.user).values_list('product_id', flat=True)
+
     params= {'products': products, 
              'sliders': sliders, 
              'features': features, 
              'customer_reviews' : customer_reviews,
-             'categories' : categories
+             'categories' : categories,
+             'blogs' : blogs,
+             'wishlist_product_ids' : wishlist_product_ids
             }
     return render(request, 'home.html', params)
 
+def about_us_page(request):
+    return render(request, 'about.html')
 
 def product_listing(request):
     # Fetch all categories for the sidebar/filter
@@ -142,7 +154,7 @@ def apply_coupon(request):
             messages.success(request, f"Coupon '{coupon.code}' applied successfully! Discount: ₹{coupon.discount_amount}")
         except Coupon.DoesNotExist:
             messages.error(request, "Invalid or expired coupon code.")
-
+    
     return redirect('cart_detail')
 
 
@@ -224,7 +236,7 @@ def place_order(request):
         if 'applied_coupon' in request.session:
             del request.session['applied_coupon']
 
-        from django.contrib import messages
+        
         messages.success(request, f"Thank you {full_name}, your order has been placed!")
 
         return redirect('product_listing')
@@ -271,8 +283,6 @@ def login_view(request):
         form = CustomAuthenticationForm()
     return render(request, 'myaccount/login.html', {'form': form})
 
-# Logout View (Django provides logout functionality out of the box)
-from django.contrib.auth import logout
 
 def logout_view(request):
     logout(request)
@@ -341,3 +351,48 @@ def blog_list(request):
 def blog_detail(request, slug):
     blog = get_object_or_404(Blog, slug=slug, status='published')
     return render(request, 'blog/blog_detail.html', {'blog': blog})
+
+@login_required
+def toggle_wishlist(request):
+    if request.method == "POST":
+        product_id = request.POST.get('product_id')
+        product = Product.objects.get(id=product_id)
+        wishlist_item, created = Wishlist.objects.get_or_create(user=request.user, product=product)
+        if not created:
+            wishlist_item.delete()
+            return JsonResponse({'status': 'removed'})
+        return JsonResponse({'status': 'added'})
+    
+
+@login_required
+def add_all_to_cart(request):
+    wishlist_items = Wishlist.objects.filter(user=request.user)
+    
+    for item in wishlist_items:
+        # Example logic for adding to cart (update to match your Cart model structure)
+        cart_item, created = Cart.objects.get_or_create(
+            user=request.user,
+            product=item.product,
+            defaults={'quantity': 1}  # Adjust as needed
+        )
+        if not created:
+            cart_item.quantity += 1
+            cart_item.save()
+
+    # Optionally clear wishlist after adding to cart
+    wishlist_items.delete()
+    messages.success(request, "All wishlist items added to cart.")
+    return redirect('view_cart')
+
+
+@login_required
+def view_cart(request):
+    cart_items = Cart.objects.filter(user=request.user)
+    total_price = sum(item.product.price * item.quantity for item in cart_items)
+
+    context = {
+        'cart_items': cart_items,
+        'total_price': total_price,
+    }
+    return render(request, 'cart/view_cart.html', context)
+

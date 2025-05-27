@@ -3,6 +3,8 @@ from django.db import models
 from django.utils import timezone
 from django.utils.text import slugify
 from django.contrib.auth.models import User
+from django.core.validators import MaxValueValidator, MinValueValidator
+from django.core.exceptions import ValidationError
 
 
 class HomeSlider(models.Model):
@@ -13,7 +15,7 @@ class HomeSlider(models.Model):
     image = models.ImageField(upload_to='slider_images/')
     author_name = models.CharField(max_length=100, blank=True, null=True)
     is_active = models.BooleanField(default=True)
-    created_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(auto_now_add=True) 
 
     class Meta:
         ordering = ['-created_at']
@@ -185,7 +187,8 @@ class Wishlist(models.Model):
         unique_together = ('user', 'product')
 
     def __str__(self):
-        return f"{self.user.username} - {self.product.name}" 
+        return f"{self.user.username} - {self.product.title}"
+ 
     
 class Blog(models.Model):
     STATUS_CHOICES = (
@@ -212,3 +215,48 @@ class Blog(models.Model):
 
     def __str__(self):
         return self.title
+    
+
+class CustomerReview(models.Model):
+    name = models.CharField(max_length=100)
+    review = models.TextField()
+    rating = models.PositiveIntegerField(
+        default=5,
+        validators=[MinValueValidator(1), MaxValueValidator(5)]
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+
+    def clean(self):
+        if self.rating > 5 or self.rating < 1:
+            raise ValidationError("Rating must be between 1 and 5.")
+
+    def __str__(self):
+        return self.name
+    
+
+class FooterContact(models.Model):
+    support_text = models.CharField(max_length=255, default="If you need support, just give us a call.")
+    
+    def __str__(self):
+        return f"Footer Contact ID {self.id}"
+
+class ContactEmail(models.Model):
+    contact = models.ForeignKey(FooterContact, related_name='emails', on_delete=models.CASCADE)
+    email = models.EmailField()
+
+    def __str__(self):
+        return self.email
+
+class ContactPhone(models.Model):
+    contact = models.ForeignKey(FooterContact, related_name='phones', on_delete=models.CASCADE)
+    phone = models.CharField(max_length=20)
+
+    def __str__(self):
+        return self.phone
+    
+
+class Cart(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    quantity = models.PositiveIntegerField(default=1)

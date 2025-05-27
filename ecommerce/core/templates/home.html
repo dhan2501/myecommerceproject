@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load custom_filters %}
 {% block title %}Home | Bookly{% endblock %}
 
 {% block content %}
@@ -83,7 +84,7 @@
       <div class="container">
         <div class="section-title d-md-flex justify-content-between align-items-center mb-4">
           <h3 class="d-flex align-items-center">Best selling items</h3>
-          <a href="index.html" class="btn">View All</a>
+          <a href="/products/" class="btn">View All</a>
         </div>
         <div class="position-absolute top-50 end-0 pe-0 pe-xxl-5 me-0 me-xxl-5 swiper-next product-slider-button-next">
           <svg class="chevron-forward-circle d-flex justify-content-center align-items-center p-2" width="80" height="80">
@@ -137,12 +138,19 @@
     </span>
 
     <div class="card-concern position-absolute start-0 end-0 d-flex gap-2">
-      <button type="button" class="btn btn-dark" data-bs-toggle="tooltip" title="Add to Cart">
-        <svg class="cart"><use xlink:href="#cart"></use></svg>
-      </button>
-      <a href="#" class="btn btn-dark">
-        <svg class="wishlist"><use xlink:href="#heart"></use></svg>
-      </a>
+      <form method="POST" action="{% url 'add_to_cart' product.id %}">
+        {% csrf_token %}
+        <input type="hidden" name="quantity" value="1">
+        <button type="submit" class="btn btn-dark" data-bs-toggle="tooltip" title="Add to Cart">
+          <svg class="cart"><use xlink:href="#cart"></use></svg>
+        </button>
+      </form>
+      <a href="#" class="btn btn-dark toggle-wishlist" data-product-id="{{ product.id }}">
+    <svg class="wishlist">
+        <use xlink:href="#heart" class="{% if product.id in wishlist_product_ids %}active{% endif %}"></use>
+    </svg>
+</a>
+      
     </div>
   </div>
 </div>
@@ -612,125 +620,39 @@
         </div>
         <div class="swiper testimonial-swiper ">
           <div class="swiper-wrapper">
-            <div class="swiper-slide">
-              <div class="card position-relative text-left p-5 border rounded-3">
-                <blockquote>"I stumbled upon this bookstore while visiting the city, and it instantly became my favorite spot. The cozy atmosphere, friendly staff, and wide selection of books make every visit a delight!"</blockquote>
-                <div class="rating text-warning d-flex align-items-center">
-                  <svg class="star star-fill">
-                    <use xlink:href="#star-fill"></use>
-                  </svg>
-                  <svg class="star star-fill">
-                    <use xlink:href="#star-fill"></use>
-                  </svg>
-                  <svg class="star star-fill">
-                    <use xlink:href="#star-fill"></use>
-                  </svg>
-                  <svg class="star star-fill">
-                    <use xlink:href="#star-fill"></use>
-                  </svg>
-                  <svg class="star star-fill">
-                    <use xlink:href="#star-fill"></use>
-                  </svg>
+            <div class="swiper-wrapper">
+              {% for review in customer_reviews %}
+                <div class="swiper-slide">
+                  <div class="card position-relative text-left p-5 border rounded-3">
+                    <blockquote>"{{ review.review }}"</blockquote>
+
+                    <div class="rating text-warning d-flex align-items-center">
+
+                    {% with total_stars=5 %}
+                      {% with empty_stars=total_stars|subtract:review.rating %}
+                        <div class="rating text-warning d-flex align-items-center">
+                          
+                          {# Filled stars #}
+                          {% for _ in 0|until:review.rating %}
+                            <svg class="star star-fill"><use xlink:href="#star-fill"></use></svg>
+                          {% endfor %}
+                          
+                          {# Empty stars #}
+                          {% for _ in 0|until:empty_stars %}
+                            <svg class="star star-empty"><use xlink:href="#star-empty"></use></svg>
+                          {% endfor %}
+                          
+                        </div>
+                      {% endwith %}
+                    {% endwith %}
+                    </div>
+
+                    <h5 class="mt-1 fw-normal">{{ review.name }}</h5>
+                  </div>
                 </div>
-                <h5 class="mt-1 fw-normal">Emma Chamberlin</h5>
-              </div>
+              {% endfor %}
             </div>
-            <div class="swiper-slide">
-              <div class="card position-relative text-left p-5 border rounded-3">
-                <blockquote>"As an avid reader, I'm always on the lookout for new releases, and this bookstore never disappoints. They always have the latest titles, and their recommendations have introduced me to some incredible reads!"</blockquote>
-                <div class="rating text-warning d-flex align-items-center">
-                  <svg class="star star-fill">
-                    <use xlink:href="#star-fill"></use>
-                  </svg>
-                  <svg class="star star-fill">
-                    <use xlink:href="#star-fill"></use>
-                  </svg>
-                  <svg class="star star-fill">
-                    <use xlink:href="#star-fill"></use>
-                  </svg>
-                  <svg class="star star-fill">
-                    <use xlink:href="#star-fill"></use>
-                  </svg>
-                  <svg class="star star-fill">
-                    <use xlink:href="#star-fill"></use>
-                  </svg>
-                </div>
-                <h5 class="mt-1 fw-normal">Thomas John</h5>
-              </div>
-            </div>
-            <div class="swiper-slide">
-              <div class="card position-relative text-left p-5 border rounded-3">
-                <blockquote>"I ordered a few books online from this store, and I was impressed by the quick delivery and careful packaging. It's clear that they prioritize customer satisfaction, and I'll definitely be shopping here again!"</blockquote>
-                <div class="rating text-warning d-flex align-items-center">
-                  <svg class="star star-fill">
-                    <use xlink:href="#star-fill"></use>
-                  </svg>
-                  <svg class="star star-fill">
-                    <use xlink:href="#star-fill"></use>
-                  </svg>
-                  <svg class="star star-fill">
-                    <use xlink:href="#star-fill"></use>
-                  </svg>
-                  <svg class="star star-fill">
-                    <use xlink:href="#star-fill"></use>
-                  </svg>
-                  <svg class="star star-fill">
-                    <use xlink:href="#star-fill"></use>
-                  </svg>
-                </div>
-                <h5 class="mt-1 fw-normal">Kevin Bryan</h5>
-              </div>
-            </div>
-            <div class="swiper-slide">
-              <div class="card position-relative text-left p-5 border rounded-3">
-                <blockquote>“I stumbled upon this tech store while searching for a new laptop, and I couldn't be happier
-                  with my experience! The staff was incredibly knowledgeable and guided me through the process of choosing
-                  the perfect device for my needs. Highly recommended!”</blockquote>
-                <div class="rating text-warning d-flex align-items-center">
-                  <svg class="star star-fill">
-                    <use xlink:href="#star-fill"></use>
-                  </svg>
-                  <svg class="star star-fill">
-                    <use xlink:href="#star-fill"></use>
-                  </svg>
-                  <svg class="star star-fill">
-                    <use xlink:href="#star-fill"></use>
-                  </svg>
-                  <svg class="star star-fill">
-                    <use xlink:href="#star-fill"></use>
-                  </svg>
-                  <svg class="star star-fill">
-                    <use xlink:href="#star-fill"></use>
-                  </svg>
-                </div>
-                <h5 class="mt-1 fw-normal">Stevin</h5>
-              </div>
-            </div>
-            <div class="swiper-slide">
-              <div class="card position-relative text-left p-5 border rounded-3">
-                <blockquote>“I stumbled upon this tech store while searching for a new laptop, and I couldn't be happier
-                  with my experience! The staff was incredibly knowledgeable and guided me through the process of choosing
-                  the perfect device for my needs. Highly recommended!”</blockquote>
-                <div class="rating text-warning d-flex align-items-center">
-                  <svg class="star star-fill">
-                    <use xlink:href="#star-fill"></use>
-                  </svg>
-                  <svg class="star star-fill">
-                    <use xlink:href="#star-fill"></use>
-                  </svg>
-                  <svg class="star star-fill">
-                    <use xlink:href="#star-fill"></use>
-                  </svg>
-                  <svg class="star star-fill">
-                    <use xlink:href="#star-fill"></use>
-                  </svg>
-                  <svg class="star star-fill">
-                    <use xlink:href="#star-fill"></use>
-                  </svg>
-                </div>
-                <h5 class="mt-1 fw-normal">Roman</h5>
-              </div>
-            </div>
+
           </div>
         </div>
       </div>
@@ -740,40 +662,31 @@
       <div class="container">
         <div class="section-title d-md-flex justify-content-between align-items-center mb-4">
           <h3 class="d-flex align-items-center">Latest posts</h3>
-          <a href="index.html" class="btn">View All</a>
+          <a href="/blogs/" class="btn">View All</a>
         </div>
         <div class="row">
-          <div class="col-md-3 posts mb-4">
-            <img src="{% static 'assets/images/post-item1.jpg' %}" alt="post image" class="img-fluid rounded-3">
-            <a href="blog.html" class="fs-6 text-primary">Books</a>
-            <h4 class="card-title mb-2 text-capitalize text-dark"><a href="index.html">10 Must-Read Books of the Year: Our Top Picks!</a></h4>
-            <p class="mb-2">Dive into the world of cutting-edge technology with our latest blog post, where we highlight
-              five essential gadge. <span><a class="text-decoration-underline text-black-50" href="index.html">Read More</a></span>
-            </p>
-          </div>
-          <div class="col-md-3 posts mb-4">
-            <img src="{% static 'assets/images/post-item2.jpg' %}" alt="post image" class="img-fluid rounded-3">
-            <a href="blog.html" class="fs-6 text-primary">Books</a>
-            <h4 class="card-title mb-2 text-capitalize text-dark"><a href="index.html">The Fascinating Realm of Science Fiction</a></h4>
-            <p class="mb-2">Explore the intersection of technology and sustainability in our latest blog post. Learn about
-              the innovative <span><a class="text-decoration-underline text-black-50" href="index.html">Read More</a></span> </p>
-          </div>
-          <div class="col-md-3 posts mb-4">
-            <img src="{% static 'assets/images/post-item3.jpg' %}" alt="post image" class="img-fluid rounded-3">
-            <a href="blog.html" class="fs-6 text-primary">Books</a>
-            <h4 class="card-title mb-2 text-capitalize text-dark"><a href="index.html">Finding Love in the Pages of a Book</a></h4>
-            <p class="mb-2">Stay ahead of the curve with our insightful look into the rapidly evolving landscape of
-              wearable technology. <span><a class="text-decoration-underline text-black-50" href="index.html">Read More</a></span>
-            </p>
-          </div>
-          <div class="col-md-3 posts mb-4">
-            <img src="{% static 'assets/images/post-item4.jpg' %}" alt="post image" class="img-fluid rounded-3">
-            <a href="blog.html" class="fs-6 text-primary">Books</a>
-            <h4 class="card-title mb-2 text-capitalize text-dark"><a href="index.html">Reading for Mental Health: How Books Can Heal and Inspire</a></h4>
-            <p class="mb-2">In today's remote work environment, productivity is key. Discover the top apps and tools that
-              can help you stay <span><a class="text-decoration-underline text-black-50" href="index.html">Read More</a></span>
-            </p>
-          </div>
+           {% for blog in blogs %}
+              {% if blog.status == 'published' %}
+                <div class="col-md-3 posts mb-4">
+                 {% if blog.image %}
+                    <img src="{{ blog.image.url }}" alt="post image" class="img-fluid rounded-3">
+                  {% else %}
+                    <img src="{% static 'assets/images/default.jpg' %}" alt="default image" class="img-fluid rounded-3">
+                  {% endif %}
+                  <a href="{% url 'blog_detail' blog.slug %}" class="fs-6 text-primary">Books</a>
+                  <h4 class="card-title mb-2 text-capitalize text-dark">
+                    <a href="{% url 'blog_detail' blog.slug %}">{{ blog.title }}</a>
+                  </h4>
+                  <p class="mb-2">
+                    {{ blog.content|truncatewords:20 }}
+                    <span><a class="text-decoration-underline text-black-50" href="{% url 'blog_detail' blog.slug %}">Read More</a></span>
+                  </p>
+                </div>
+              {% endif %}
+            {% empty %}
+              <p>No blog posts available.</p>
+            {% endfor %}
+
         </div>
       </div>
     </section>

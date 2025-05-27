@@ -1,4 +1,4 @@
-from dashboard.models import Product
+from dashboard.models import Product, FooterContact, Wishlist
 
 def cart_counter(request):
     cart = request.session.get('cart', {})
@@ -39,4 +39,30 @@ def cart_context(request):
     return {
         'cart_items': cart_items,
         'cart_total': cart_total,
+    }
+
+
+
+def footer_contact_context(request):
+    contact = FooterContact.objects.prefetch_related('emails', 'phones').first()
+    return {'contact': contact}
+
+
+def wishlist_context(request):
+    if request.user.is_authenticated:
+        wishlist_items = Wishlist.objects.filter(user=request.user)
+        wishlist_count = wishlist_items.count()
+        wishlist_total_price = sum([
+            item.product.sale_price or item.product.regular_price
+            for item in wishlist_items
+        ])
+    else:
+        wishlist_items = []
+        wishlist_count = 0
+        wishlist_total_price = 0
+
+    return {
+        'wishlist_items': wishlist_items,
+        'wishlist_count': wishlist_count,
+        'wishlist_total_price': wishlist_total_price,
     }
