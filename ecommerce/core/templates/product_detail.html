@@ -9,8 +9,21 @@
             <img src="{{ product.image.url }}" class="img-fluid rounded shadow" alt="{{ product.name }}">
         </div>
 
+         
         <!-- Product Info -->
         <div class="col-md-7">
+          <!-- Breadcrumb -->
+          <nav aria-label="breadcrumb">
+              <ol class="breadcrumb bg-transparent px-0">
+                  <li class="breadcrumb-item">
+                      <a href="/">Home</a>
+                  </li>
+                  <li class="breadcrumb-item">
+                      <a href="{% url 'product_listing' %}?category={{ product.category.slug }}">{{ product.category.name }}</a>
+                  </li>
+                  <li class="breadcrumb-item active" aria-current="page">{{ product.title }}</li>
+              </ol>
+          </nav>
             <h2>{{ product.title }}</h2>
             <p><strong>Category:</strong> {{ product.category }}</p>
             <p><strong>Description:</strong> {{ product.description }}</p>

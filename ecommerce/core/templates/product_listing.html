@@ -18,7 +18,7 @@
                     </a>
                   
                     {% for category in categories %}
-                      <a href="?category={{ category.id }}" class="list-group-item list-group-item-action {% if request.GET.category == category.id|stringformat:'s' %}active{% endif %}">
+                      <a href="{% url 'product_listing' %}?category={{ category.slug }}" class="list-group-item list-group-item-action {% if request.GET.category == category.slug|stringformat:'s' %}active{% endif %}">
                         {{ category.name }}
                       </a>
                     {% empty %}
@@ -44,10 +44,10 @@
                                 <p class="card-text"><small class="text-muted">Sale: ${{ product.sale_price }}</small></p>
                                 <p class="card-text"><strong>Discount: {{ product.discount_percentage }}%</strong></p>
                             {% endif %}
-                            <a href="{% url 'product_detail' product.id %}" class="btn btn-primary">View Details</a>
+                            <a href="{% url 'product_detail'  slug=product.slug %}" class="btn btn-primary" style="width: 100%;margin-bottom: 10px;">View Details</a>
                             <form method="post" action="{% url 'add_to_cart' product.id %}" class="d-inline">
                                 {% csrf_token %}
-                                <button type="submit" class="btn btn-success btn-sm">Add to Cart</button>
+                                <button type="submit" class="btn btn-success btn-sm" style="width: 100%;">Add to Cart</button>
                             </form>
                         </div>
                     </div>

@@ -44,16 +44,18 @@ def about_us_page(request):
     return render(request, 'about.html')
 
 def product_listing(request):
-    # Fetch all categories for the sidebar/filter
-    categories = ProductCategory.objects.all()
-
-    # Start with all products
+    category_slug = request.GET.get('category')
     products = Product.objects.all()
 
-    # Apply category filter if provided via GET
-    category_filter = request.GET.get('category')
-    if category_filter:
-        products = products.filter(category_id=category_filter)
+    if category_slug:
+        category = get_object_or_404(ProductCategory, slug=category_slug)
+        products = products.filter(category=category)
+
+    context = {
+        'products': products,
+        'categories': ProductCategory.objects.all(),  # if you're showing category list
+    }
+    return render(request, 'product_listing.html', context)
 
 
     context = {
@@ -395,4 +397,31 @@ def view_cart(request):
         'total_price': total_price,
     }
     return render(request, 'cart/view_cart.html', context)
+
+def add_to_wishlist(request, product_id):
+    if not request.user.is_authenticated:
+        return redirect('login')
+
+    product = get_object_or_404(Product, id=product_id)
+
+    # Add to cart logic (update this depending on your Cart model)
+    cart_item, created = Cart.objects.get_or_create(
+        user=request.user,
+        product=product,
+        defaults={'quantity': 1}
+    )
+    if not created:
+        cart_item.quantity += 1
+        cart_item.save()
+
+    # Optionally remove from wishlist
+    Wishlist.objects.filter(user=request.user, product=product).delete()
+
+    return redirect('view_cart')  # or wherever you want to go
+
+@login_required
+def remove_from_wishlist(request, product_id):
+    if request.method == "POST":
+        Wishlist.objects.filter(user=request.user, product_id=product_id).delete()
+    return redirect(request.META.get('HTTP_REFERER', 'home'))
 

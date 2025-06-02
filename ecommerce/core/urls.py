@@ -9,8 +9,10 @@ urlpatterns = [
     path('products/', views.product_listing, name='product_listing'),
     # path('product/<int:id>/', views.product_detail, name='product_detail'),
     path('product/<slug:slug>/', views.product_detail, name='product_detail'),
-    path('category/<int:pk>/', views.category_detail, name='category_detail'),
-    # path('wishlist/add/<int:product_id>/', views.add_to_wishlist, name='add_to_wishlist'),
+    path('category/<slug:slug>/', views.category_detail, name='category_detail'),
+    path('wishlist/add/<int:product_id>/', views.add_to_wishlist, name='add_to_wishlist'),
+    path('wishlist/remove/<int:product_id>/', views.remove_from_wishlist, name='remove_from_wishlist'),
+
     path('blogs/', views.blog_list, name='blog_list'),
     path('blogs/<slug:slug>/', views.blog_detail, name='blog_detail'),
     path('apply-coupon/', views.apply_coupon, name='apply_coupon'),
@@ -28,7 +30,6 @@ urlpatterns = [
     path('orders/<int:order_id>/', views.order_detail, name='order_detail'),
     path('myaccount/', views.home_view, name='home_view'),
     path('toggle/', views.toggle_wishlist, name='toggle_wishlist'),
-    path('wishlist/add-to-cart/<int:product_id>/', views.add_to_cart, name='add_to_cart'),
     path('wishlist/add-all/', views.add_all_to_cart, name='add_all_to_cart'),
     path('cart/', views.view_cart, name='view_cart'),
 
